@@ -29,12 +29,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/LucienSong/shell-sdk.git"
+    "url": "git+https://github.com/ShellDAO/shell-sdk.git"
   },
   "bugs": {
-    "url": "https://github.com/LucienSong/shell-sdk/issues"
+    "url": "https://github.com/ShellDAO/shell-sdk/issues"
   },
-  "homepage": "https://github.com/LucienSong/shell-sdk#readme",
+  "homepage": "https://github.com/ShellDAO/shell-sdk#readme",
   "dependencies": {
     "@scure/base": "^1.2.6",
     "viem": "^2.39.0"
