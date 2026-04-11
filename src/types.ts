@@ -46,3 +46,26 @@ export interface ShellTxByAddressPage {
 export interface ShellSendTransactionParams {
   signedTransaction: SignedShellTransaction;
 }
+
+export interface ShellKdfParams {
+  m_cost: number;
+  t_cost: number;
+  p_cost: number;
+  salt: string;
+}
+
+export interface ShellCipherParams {
+  nonce: string;
+}
+
+export interface ShellEncryptedKey {
+  version: number;
+  address: string;
+  key_type: string;
+  kdf: string;
+  kdf_params: ShellKdfParams;
+  cipher: string;
+  cipher_params: ShellCipherParams;
+  ciphertext: string;
+  public_key: string;
+}

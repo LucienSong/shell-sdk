@@ -47,11 +47,30 @@ export {
   DEFAULT_TRANSFER_GAS_LIMIT,
   DEFAULT_TX_TYPE,
 } from "./transactions.js";
+export {
+  assertSignerMatchesKeystore,
+  exportEncryptedKeyJson,
+  parseEncryptedKey,
+  validateEncryptedKeyAddress,
+  type ParsedShellKeystore,
+} from "./keystore.js";
+export {
+  buildShellSignature,
+  KEY_TYPE_TO_SIGNATURE_TYPE,
+  publicKeyFromHex,
+  ShellSigner,
+  SIGNATURE_TYPE_IDS,
+  signatureTypeFromKeyType,
+  type SignerAdapter,
+} from "./signer.js";
 export type {
   AddressLike,
   HexString,
   ShellAccessListItem,
+  ShellCipherParams,
+  ShellEncryptedKey,
   ShellSendTransactionParams,
+  ShellKdfParams,
   ShellSignature,
   ShellTransactionRequest,
   ShellTxByAddressPage,

@@ -29,3 +29,6 @@ npm run build
 - `buildTransferTransaction`
 - `buildRotateKeyTransaction`
 - `buildSignedTransaction`
+- `ShellSigner`
+- `parseEncryptedKey`
+- `validateEncryptedKeyAddress`
