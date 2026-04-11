@@ -49,11 +49,22 @@ export {
 } from "./transactions.js";
 export {
   assertSignerMatchesKeystore,
+  decryptKeystore,
   exportEncryptedKeyJson,
   parseEncryptedKey,
   validateEncryptedKeyAddress,
   type ParsedShellKeystore,
 } from "./keystore.js";
+export {
+  adapterFromKeyPair,
+  generateAdapter,
+  generateMlDsa65KeyPair,
+  generateSlhDsaKeyPair,
+  MlDsa65Adapter,
+  SlhDsaAdapter,
+  type MlDsa65KeyPair,
+  type SlhDsaKeyPair,
+} from "./adapters.js";
 export {
   buildShellSignature,
   KEY_TYPE_TO_SIGNATURE_TYPE,
