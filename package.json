@@ -1,0 +1,46 @@
+{
+  "name": "shell-sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for Shell Chain",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "keywords": [
+    "shell-chain",
+    "sdk",
+    "viem",
+    "typescript",
+    "pq"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LucienSong/shell-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/LucienSong/shell-sdk/issues"
+  },
+  "homepage": "https://github.com/LucienSong/shell-sdk#readme",
+  "dependencies": {
+    "@scure/base": "^1.2.6",
+    "viem": "^2.39.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  }
+}
