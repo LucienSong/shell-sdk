@@ -47,7 +47,6 @@ export {
   DEFAULT_TRANSFER_GAS_LIMIT,
   DEFAULT_TX_TYPE,
   hashTransaction,
-  hexBytes,
 } from "./transactions.js";
 export {
   assertSignerMatchesKeystore,
@@ -69,10 +68,8 @@ export {
 } from "./adapters.js";
 export {
   buildShellSignature,
-  KEY_TYPE_TO_SIGNATURE_TYPE,
   publicKeyFromHex,
   ShellSigner,
-  SIGNATURE_TYPE_IDS,
   signatureTypeFromKeyType,
   type SignerAdapter,
 } from "./signer.js";

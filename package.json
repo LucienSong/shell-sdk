@@ -1,6 +1,6 @@
 {
   "name": "shell-sdk",
-  "version": "0.1.0",
+  "version": "0.2.0-rc.1",
   "description": "TypeScript SDK for Shell Chain",
   "license": "MIT",
   "type": "module",
@@ -50,7 +50,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "clean": "rm -rf dist",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "npm run build && node --test tests/**/*.test.mjs"
   },
   "keywords": [
     "shell-chain",

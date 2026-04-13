@@ -22,10 +22,13 @@
   - [System contracts](#system-contracts)
   - [Keystore](#keystore)
 - [End-to-end examples](#end-to-end-examples)
+  - [Wallet extension background flow](#wallet-extension-background-flow)
+  - [Minimal dApp flow](#minimal-dapp-flow)
 - [Key rotation](#key-rotation)
 - [Error handling](#error-handling)
 - [TypeScript types reference](#typescript-types-reference)
 - [Compatibility](#compatibility)
+- [Release checklist](#release-checklist)
 - [Chain reference](#chain-reference)
 
 ---
@@ -127,6 +130,8 @@ These are sent as ordinary transactions whose `to` field is the AccountManager a
 ---
 
 ## Module reference
+
+The package root (`shell-sdk`) is the **stable surface** for typical app usage. Lower-level constants and helpers that are more likely to change remain available from subpath imports such as `shell-sdk/signer` and `shell-sdk/transactions`.
 
 ### Types
 
@@ -434,9 +439,11 @@ const signed = buildSignedTransaction({
 
 #### `hashTransaction`
 
-RLP-encode a `ShellTransactionRequest` and return its **keccak256** hash as a `Uint8Array`. This is the value you must pass as `txHash` to `signer.buildSignedTransaction`.
+RLP-encode a `ShellTransactionRequest` using the Rust node's canonical field order and return its **keccak256** hash as a `Uint8Array`. This is the value you must pass as `txHash` to `signer.buildSignedTransaction`.
 
-Shell Chain computes the signing hash identically to Ethereum EIP-1559: `keccak256(RLP([chainId, nonce, maxPriorityFeePerGas, maxFeePerGas, gasLimit, to, value, data, accessList]))`.
+Shell Chain signs the full unsigned transaction payload in this order:
+
+`[chainId, nonce, to, value, data, gasLimit, maxFeePerGas, maxPriorityFeePerGas, accessList, txType, blobFeeFlag, maxFeePerBlobGas, blobVersionedHashes]`
 
 ```typescript
 import { buildTransferTransaction, hashTransaction } from "shell-sdk/transactions";
@@ -620,6 +627,55 @@ console.log(hash);
 
 ---
 
+### Wallet extension background flow
+
+This is the recommended shape for a Chrome extension background worker: keep the decrypted signer only in memory, fetch the latest nonce from RPC, and use the stable root entrypoint for the common path.
+
+```typescript
+import { createShellProvider, buildTransferTransaction, hashTransaction } from "shell-sdk";
+
+async function submitTransfer({ signer, to, value, rpcHttpUrl }: {
+  signer: { getHexAddress(): `0x${string}`; buildSignedTransaction(args: { tx: unknown; txHash: Uint8Array; includePublicKey?: boolean }): Promise<unknown> };
+  to: string;
+  value: bigint;
+  rpcHttpUrl: string;
+}) {
+  const provider = createShellProvider({ rpcHttpUrl });
+  const nonce = await provider.client.getTransactionCount({ address: signer.getHexAddress() });
+
+  const tx = buildTransferTransaction({
+    chainId: 424242,
+    nonce,
+    to,
+    value,
+  });
+  const txHash = hashTransaction(tx);
+  const signed = await signer.buildSignedTransaction({ tx, txHash, includePublicKey: nonce === 0 });
+
+  return provider.sendTransaction(signed);
+}
+```
+
+### Minimal dApp flow
+
+For a lightweight web app, keep the provider in the page and delegate signing to an injected wallet or background bridge:
+
+```typescript
+import { createShellProvider, normalizePqAddress } from "shell-sdk";
+
+const provider = createShellProvider({
+  rpcHttpUrl: "https://rpc.testnet.shell.network",
+});
+
+const account = normalizePqAddress("0x1234...abcd");
+const history = await provider.getTransactionsByAddress(account, { page: 1, limit: 10 });
+
+console.log("recent txs:", history.transactions);
+console.log("total:", history.total);
+```
+
+---
+
 ## Key rotation
 
 Shell Chain accounts support **key rotation** — replacing the signing key without changing the account address. This is a critical security feature for post-quantum safety.
@@ -752,6 +808,19 @@ interface ShellSignature {
 | [`@noble/ciphers`](https://github.com/paulmillr/noble-ciphers) | xchacha20-poly1305 |
 | [`@scure/base`](https://github.com/paulmillr/scure-base) | bech32m encoding |
 | [`hash-wasm`](https://github.com/nicowillis/hash-wasm) | argon2id (WASM) |
+
+---
+
+## Release checklist
+
+Before publishing a `shell-sdk` release candidate:
+
+1. Run `npm test` and `npm run typecheck`.
+2. Confirm the stable root surface still excludes low-level helpers such as `hexBytes` and internal signer maps.
+3. Verify Browser + Node integration tests both cover signer, keystore, and provider RPC flows.
+4. Review README examples against the current public exports (`shell-sdk`, `shell-sdk/signer`, `shell-sdk/transactions`).
+5. Check `package.json` `exports`, `files`, `version`, and repository metadata.
+6. Build once from a clean tree and smoke-import the package root plus subpaths from `dist/`.
 
 ---
 

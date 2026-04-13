@@ -7,7 +7,7 @@
  *
  * @module transactions
  */
-import { bytesToHex, keccak256, toRlp, numberToHex, hexToBytes } from "viem";
+import { bytesToHex, keccak256, toRlp, hexToBytes } from "viem";
 
 import type {
   AddressLike,
@@ -23,6 +23,7 @@ import {
   encodeRotateKeyCalldata,
   encodeSetValidationCodeCalldata,
 } from "./system-contracts.js";
+import { normalizeHexAddress } from "./address.js";
 
 /** Default transaction type: `2` (EIP-1559). */
 export const DEFAULT_TX_TYPE = 2;
@@ -87,6 +88,27 @@ function toByteArray(bytes: Uint8Array | number[]): number[] {
 
 function toHexData(data?: HexString): HexString {
   return data ?? "0x";
+}
+
+function toRlpUint(value: number | bigint | string): HexString {
+  const numeric = typeof value === "string" ? BigInt(value) : BigInt(value);
+  if (numeric === 0n) {
+    return "0x";
+  }
+  return `0x${numeric.toString(16)}`;
+}
+
+function toRlpAccessList(
+  accessList?: ShellTransactionRequest["access_list"] | null,
+): Array<[HexString, HexString[]]> {
+  if (!accessList || accessList.length === 0) {
+    return [];
+  }
+
+  return accessList.map((item) => [
+    normalizeHexAddress(item.address),
+    item.storage_keys.map((key) => key as HexString),
+  ]);
 }
 
 /**
@@ -308,8 +330,8 @@ export function hexBytes(bytes: Uint8Array): HexString {
  * `keccak256(RLP(tx))` — the same scheme as Ethereum EIP-1559 signing.
  *
  * **Encoding order** (EIP-2718 type-2 fields):
- * chainId, nonce, maxPriorityFeePerGas, maxFeePerGas, gasLimit,
- * to, value, data, accessList, maxFeePerBlobGas (if present), blobVersionedHashes (if present)
+ * chainId, nonce, to, value, data, gasLimit, maxFeePerGas, maxPriorityFeePerGas,
+ * accessList, txType, blobFeeFlag, maxFeePerBlobGas, blobVersionedHashes
  *
  * @example
  * ```typescript
@@ -324,29 +346,23 @@ export function hexBytes(bytes: Uint8Array): HexString {
  * @returns 32-byte keccak256 hash as a `Uint8Array`.
  */
 export function hashTransaction(tx: ShellTransactionRequest): Uint8Array {
-  const to = tx.to ? hexToBytes(tx.to.startsWith("0x") ? (tx.to as `0x${string}`) : `0x${tx.to}`) : new Uint8Array(0);
-  const data = hexToBytes(tx.data as `0x${string}`);
-  const value = hexToBytes(tx.value as `0x${string}`);
-
-  const fields: `0x${string}`[] = [
-    numberToHex(tx.chain_id),
-    numberToHex(tx.nonce),
-    numberToHex(tx.max_priority_fee_per_gas),
-    numberToHex(tx.max_fee_per_gas),
-    numberToHex(tx.gas_limit),
-    bytesToHex(to),
-    bytesToHex(value),
-    bytesToHex(data),
-    "0x",  // empty access list
-  ];
-
-  if (tx.max_fee_per_blob_gas != null) {
-    fields.push(numberToHex(tx.max_fee_per_blob_gas));
-    fields.push("0x");  // empty blob versioned hashes
-  }
+  const fields = [
+    toRlpUint(tx.chain_id),
+    toRlpUint(tx.nonce),
+    tx.to ? normalizeHexAddress(tx.to) : "0x",
+    toRlpUint(tx.value),
+    tx.data,
+    toRlpUint(tx.gas_limit),
+    toRlpUint(tx.max_fee_per_gas),
+    toRlpUint(tx.max_priority_fee_per_gas),
+    toRlpAccessList(tx.access_list),
+    toRlpUint(tx.tx_type ?? DEFAULT_TX_TYPE),
+    toRlpUint(tx.max_fee_per_blob_gas != null ? 1 : 0),
+    toRlpUint(tx.max_fee_per_blob_gas ?? 0),
+    (tx.blob_versioned_hashes ?? []).map((hash) => hash as HexString),
+  ] as const;
 
   const rlpEncoded = toRlp(fields);
   const hash = hexToBytes(keccak256(rlpEncoded));
   return hash;
 }
-
