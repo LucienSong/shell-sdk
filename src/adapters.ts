@@ -1,8 +1,15 @@
 /**
  * Concrete SignerAdapter implementations for each PQ algorithm.
  *
- * @noble/post-quantum provides ML-DSA-65 and SLH-DSA-SHA2-256f.
- * Dilithium3 (pre-FIPS Round-3) uses {@link MlDsa65Adapter} as a stand-in.
+ * `@noble/post-quantum` provides ML-DSA-65 and SLH-DSA-SHA2-256f via
+ * WebAssembly-accelerated pure-JS implementations.
+ *
+ * **Dilithium3 compatibility note**: `pqcrypto-dilithium` v0.5 (used by
+ * shell-chain) implements ML-DSA-65 (FIPS 204) under the `dilithium3` name.
+ * `@noble/post-quantum` `ml_dsa65` produces byte-identical keys and
+ * signatures (pk=1952, sk=4032, sig=3309), so `MlDsa65Adapter` is fully
+ * wire-compatible with the chain's Dilithium3 verifier. Both `"Dilithium3"`
+ * and `"MlDsa65"` algorithm names route to the same adapter.
  *
  * @module adapters
  */
@@ -54,8 +61,10 @@ export function generateSlhDsaKeyPair(seed?: Uint8Array): SlhDsaKeyPair {
 /**
  * {@link SignerAdapter} for ML-DSA-65 (NIST FIPS 204).
  *
- * Also used as the implementation for `"Dilithium3"` (the pre-standardisation
- * Round-3 variant) since the wire format is compatible.
+ * This is the primary signing adapter for Shell Chain. It is also used for
+ * `"Dilithium3"` keys since `pqcrypto-dilithium` v0.5 (the Rust crate used
+ * by shell-chain) implements FIPS 204 ML-DSA-65 — producing byte-identical
+ * keys and signatures (pk=1952 bytes, sk=4032 bytes, sig=3309 bytes).
  *
  * @example
  * ```typescript

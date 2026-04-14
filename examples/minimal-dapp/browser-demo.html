@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Shell SDK — Minimal Browser dApp</title>
+    <style>
+      body { font-family: monospace; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
+      pre  { background: #1a1a1a; color: #d4d4d4; padding: 1rem; border-radius: 4px; overflow-x: auto; }
+      button { padding: .5rem 1.2rem; cursor: pointer; margin: .25rem; }
+      #log { white-space: pre-wrap; }
+    </style>
+  </head>
+  <body>
+    <h1>Shell SDK — Minimal Browser dApp</h1>
+    <p>This page runs entirely in the browser using ES modules from a CDN (or local build).</p>
+
+    <button onclick="generateKey()">1. Generate Key</button>
+    <button onclick="queryBalance()">2. Query Balance</button>
+    <button onclick="buildTx()">3. Build &amp; Sign Tx</button>
+
+    <pre id="log">Click a button to start…</pre>
+
+    <script type="module">
+      // Adjust the import path to your local build or CDN URL.
+      // e.g. import { MlDsa65Adapter, ... } from "./shell-sdk.esm.js";
+      // For local dev: `cd shell-sdk && npm run build` then serve this folder.
+      const SDK_URL = "./../../dist/index.js";
+
+      let signer = null;
+
+      function log(...args) {
+        const el = document.getElementById("log");
+        el.textContent += args.map(String).join(" ") + "\n";
+      }
+
+      async function loadSdk() {
+        try {
+          return await import(SDK_URL);
+        } catch (e) {
+          log("Failed to load SDK:", e.message);
+          log("Make sure you have run `npm run build` in the shell-sdk directory");
+          log("and are serving this file from an HTTP server (not file://).");
+          throw e;
+        }
+      }
+
+      window.generateKey = async function () {
+        const { MlDsa65Adapter, ShellSigner } = await loadSdk();
+        const adapter = MlDsa65Adapter.generate();
+        signer = new ShellSigner("MlDsa65", adapter);
+        log("=== Key Generated ===");
+        log("Address (pq1…):", signer.getAddress());
+        log("Address (0x…):", signer.getHexAddress());
+        log("Public key size:", adapter.getPublicKey().length, "bytes");
+      };
+
+      window.queryBalance = async function () {
+        if (!signer) { log("Generate a key first!"); return; }
+        const { createShellProvider } = await loadSdk();
+        const rpc = prompt("RPC URL?", "http://127.0.0.1:8545");
+        if (!rpc) return;
+        const provider = createShellProvider({ url: rpc });
+        try {
+          const bal = await provider.getBalance({ address: signer.getHexAddress() });
+          log("Balance:", bal.toString(), "wei");
+        } catch (e) {
+          log("getBalance error:", e.message);
+        }
+      };
+
+      window.buildTx = async function () {
+        if (!signer) { log("Generate a key first!"); return; }
+        const { hashTransaction } = await loadSdk();
+        const tx = {
+          from: signer.getHexAddress(),
+          chain_id: 1337,
+          nonce: 0,
+          to: "0x0000000000000000000000000000000000000001",
+          value: "0x1",
+          data: "0x",
+          gas_limit: 21000,
+          max_fee_per_gas: 1_000_000_000,
+          max_priority_fee_per_gas: 1_000_000_000,
+        };
+        const txHash = hashTransaction(tx);
+        const signed = await signer.buildSignedTransaction({ tx, txHash, includePublicKey: true });
+        log("=== Signed Transaction ===");
+        log("Type:", signed.type);
+        log("From:", signed.from);
+        log("To:", signed.to);
+        log("Value:", signed.value.toString());
+        log("Sig length:", signed.signature.data.length, "bytes");
+        log("Has pubkey:", signed.sender_pubkey != null);
+        log("\nCall provider.sendTransaction(signed) to broadcast to a live node.");
+      };
+    </script>
+  </body>
+</html>
