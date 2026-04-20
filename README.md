@@ -39,7 +39,8 @@
 - **PQ addresses** — bech32m-encoded `pq1…` addresses derived from PQ public keys via BLAKE3
 - **Native account abstraction** — key rotation and custom validation code via system contracts
 - **viem integration** — standard Ethereum JSON-RPC methods via a typed `PublicClient`
-- **Shell-specific RPC** — `shell_getPqPubkey`, `shell_sendTransaction`, `shell_getTransactionsByAddress`
+- **Shell-specific RPC** — `shell_getPqPubkey`, `shell_sendTransaction`, `shell_getTransactionsByAddress`, `shell_getNodeInfo`, `shell_getWitness`
+- **Node introspection** — `getNodeInfo()` returns version, block height, peer count, and storage profile; `getWitness()` fetches raw PQ signatures for any block
 - **Encrypted keystore** — argon2id KDF + xchacha20-poly1305 cipher; compatible with the Shell CLI
 
 ---
@@ -237,6 +238,9 @@ import { shellDevnet } from "shell-sdk/provider";
 | `sendTransaction(signed)` | `shell_sendTransaction` → tx hash string |
 | `getTransactionsByAddress(address, opts)` | `shell_getTransactionsByAddress` with optional `fromBlock/toBlock/page/limit` |
 | `getBlockReceipts(block)` | `eth_getBlockReceipts` → array of receipts |
+| `getNodeInfo()` | `shell_getNodeInfo` → `ShellNodeInfo` (version, block height, peer count, storage profile) |
+| `getWitness(blockNumberOrHash)` | `shell_getWitness` → `ShellWitnessBundle` or `null` if pruned |
+| `getStorageProfile()` | Convenience wrapper around `getNodeInfo()` → `ShellStorageProfile \| undefined` |
 
 **Examples:**
 

@@ -89,6 +89,65 @@ export interface SignedShellTransaction {
   sender_pubkey?: number[] | null;
 }
 
+/**
+ * Node storage profile as advertised via the `StorageCapability` P2P message.
+ *
+ * - `"archive"` — all TX bodies and PQ witnesses kept forever; STARK proofs never replace witnesses.
+ * - `"full"` — TX bodies kept forever; PQ witnesses replaced by STARK proofs when they arrive.
+ * - `"light"` — rolling ~4096-block window; older data pruned.
+ */
+export type ShellStorageProfile = "archive" | "full" | "light";
+
+/**
+ * Response from `shell_getNodeInfo`.
+ *
+ * Contains runtime metadata about the connected Shell Chain node.
+ */
+export interface ShellNodeInfo {
+  /** Node software version string, e.g. `"shell-node/0.16.0"`. */
+  version: string;
+  /** Chain ID as a decimal string. */
+  chain_id: string;
+  /** Current head block number (decimal). */
+  block_height: number;
+  /** libp2p peer ID of this node. */
+  peer_id: string;
+  /** Number of currently connected peers. */
+  peer_count: number;
+  /** Active storage profile. */
+  storage_profile?: ShellStorageProfile;
+  /** Oldest block number for which this node has full body data. */
+  oldest_body_block?: number;
+}
+
+/**
+ * A single PQ transaction witness from `shell_getBlockWitnesses` / `shell_getWitness`.
+ */
+export interface ShellTxWitness {
+  /** Zero-based transaction index within the block. */
+  tx_index: number;
+  /** Signature algorithm name. */
+  sig_type: SignatureTypeName;
+  /** Raw signature bytes as hex string. */
+  signature: string;
+  /** Raw public key bytes as hex string (only present on first-use txs). */
+  public_key?: string;
+}
+
+/**
+ * Response from `shell_getWitness` for a single block.
+ */
+export interface ShellWitnessBundle {
+  /** Block hash (0x-prefixed). */
+  block_hash: string;
+  /** Block number. */
+  block_number: number;
+  /** Number of witnesses in this bundle. */
+  witness_count: number;
+  /** Individual transaction witnesses. */
+  witnesses: ShellTxWitness[];
+}
+
 /** Paginated response from `shell_getTransactionsByAddress`. */
 export interface ShellTxByAddressPage {
   address: AddressLike;

@@ -24,7 +24,12 @@ import {
   type PublicClient,
 } from "viem";
 
-import type { SignedShellTransaction } from "./types.js";
+import type {
+  ShellNodeInfo,
+  ShellStorageProfile,
+  ShellWitnessBundle,
+  SignedShellTransaction,
+} from "./types.js";
 
 /**
  * Pre-configured viem chain definition for Shell Devnet.
@@ -192,6 +197,44 @@ export class ShellProvider {
    */
   async getBlockReceipts(block: string): Promise<unknown[]> {
     return this.request("eth_getBlockReceipts", [block]);
+  }
+
+  /**
+   * Fetch metadata about the connected Shell Chain node.
+   *
+   * Calls `shell_getNodeInfo`.
+   *
+   * @returns Node info including version, block height, peer count, and storage profile.
+   */
+  async getNodeInfo(): Promise<ShellNodeInfo> {
+    return this.request("shell_getNodeInfo", []);
+  }
+
+  /**
+   * Fetch the PQ witness bundle for a block.
+   *
+   * Calls `shell_getWitness`. Returns `null` if the witness has been pruned
+   * (the node is running with a `full` or `light` profile and the STARK proof
+   * has already replaced the raw signatures).
+   *
+   * @param blockNumberOrHash - Hex block number (`"0x1a"`) or block hash.
+   * @returns Witness bundle, or `null` if pruned.
+   */
+  async getWitness(blockNumberOrHash: string): Promise<ShellWitnessBundle | null> {
+    return this.request("shell_getWitness", [blockNumberOrHash]);
+  }
+
+  /**
+   * Fetch the active storage profile of the connected node.
+   *
+   * Convenience wrapper around {@link getNodeInfo}.
+   *
+   * @returns Storage profile string (`"archive"`, `"full"`, or `"light"`), or
+   *   `undefined` if the node does not report it.
+   */
+  async getStorageProfile(): Promise<ShellStorageProfile | undefined> {
+    const info = await this.getNodeInfo();
+    return info.storage_profile;
   }
 }
 
