@@ -1,6 +1,12 @@
 # Changelog
 
-## [0.2.0] — 2026-04-14
+## [0.17.0] — 2026-04-21
+
+### Changed
+- Bump version to align with shell-chain v0.17.0
+- Update NodeInfo version string example to shell-node/0.17.0
+
+## [0.16.0] — 2026-04-21
 
 ### Added
 - **API freeze**: `ShellSigner`, `ShellProvider`, and `ShellWallet` are now stable public APIs.
