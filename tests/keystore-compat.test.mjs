@@ -35,10 +35,10 @@ test('ks-3: parseEncryptedKey reads CLI ML-DSA-65 keystore metadata', () => {
   assert.equal(cliMlDsa65.kdf, 'argon2id', 'kdf must be argon2id');
   assert.equal(cliMlDsa65.cipher, 'xchacha20-poly1305', 'cipher must be xchacha20-poly1305');
 
-  // Address stored by CLI must be 0x-prefixed hex (KS.6 fix)
+  // Address stored by CLI must be pq1… bech32m format (F-PQ1-ONLY)
   assert.ok(
-    cliMlDsa65.address.startsWith('0x'),
-    'CLI keystore address must have 0x prefix (KS.6)',
+    cliMlDsa65.address.startsWith('pq1'),
+    'CLI keystore address must be pq1 bech32m format',
   );
 
   assert.equal(parsed.signatureType, 'ML-DSA-65');
@@ -83,8 +83,8 @@ test('ks-3: parseEncryptedKey reads CLI Dilithium3 keystore metadata', () => {
 
   assert.equal(cliDilithium3.key_type, 'dilithium3', 'key_type must be dilithium3');
   assert.ok(
-    cliDilithium3.address.startsWith('0x'),
-    'CLI Dilithium3 keystore address must have 0x prefix',
+    cliDilithium3.address.startsWith('pq1'),
+    'CLI Dilithium3 keystore address must be pq1 bech32m format',
   );
 
   assert.equal(parsed.signatureType, 'Dilithium3');

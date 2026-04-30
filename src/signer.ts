@@ -11,7 +11,7 @@
  */
 import { hexToBytes } from "viem";
 
-import { derivePqAddressFromPublicKey, normalizeHexAddress, normalizePqAddress } from "./address.js";
+import { derivePqAddressFromPublicKey, normalizePqAddress } from "./address.js";
 import {
   buildSignature,
   buildSignedTransaction,
@@ -41,8 +41,8 @@ export const SIGNATURE_TYPE_IDS: Record<SignatureTypeName, number> = {
  * Keys are lowercase; matching is done after calling `.toLowerCase()`.
  */
 export const KEY_TYPE_TO_SIGNATURE_TYPE: Record<string, SignatureTypeName> = {
-  "ml-dsa-65": "ML-DSA-65",
-  mldsa65: "ML-DSA-65",
+  "ml-dsa-65": "MlDsa65",
+  mldsa65: "MlDsa65",
   dilithium3: "Dilithium3",
   "sphincs-sha2-256f": "SphincsSha2256f",
 };
@@ -86,8 +86,7 @@ export interface SignerAdapter {
  * const adapter = MlDsa65Adapter.generate();
  * const signer  = new ShellSigner("MlDsa65", adapter);
  *
- * console.log(signer.getAddress());    // pq1…
- * console.log(signer.getHexAddress()); // 0x…
+ * console.log(signer.getAddress()); // pq1…
  * ```
  */
 export class ShellSigner {
@@ -126,15 +125,6 @@ export class ShellSigner {
    */
   getAddress(): string {
     return derivePqAddressFromPublicKey(this.getPublicKey(), this.algorithmId);
-  }
-
-  /**
-   * Return the `0x…` hex representation of this signer's address.
-   *
-   * Equivalent to `normalizeHexAddress(signer.getAddress())`.
-   */
-  getHexAddress(): `0x${string}` {
-    return normalizeHexAddress(this.getAddress());
   }
 
   /**

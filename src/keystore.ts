@@ -20,7 +20,7 @@
 import { xchacha20poly1305 } from "@noble/ciphers/chacha.js";
 import { argon2id } from "hash-wasm";
 
-import { derivePqAddressFromPublicKey, normalizeHexAddress, normalizePqAddress } from "./address.js";
+import { derivePqAddressFromPublicKey, normalizePqAddress } from "./address.js";
 import { adapterFromKeyPair } from "./adapters.js";
 import { ShellSigner, publicKeyFromHex, signatureTypeFromKeyType } from "./signer.js";
 import type { ShellEncryptedKey, SignatureTypeName } from "./types.js";
@@ -41,8 +41,6 @@ export interface ParsedShellKeystore {
   publicKey: Uint8Array;
   /** Canonical `pq1…` address derived from `publicKey`. */
   canonicalAddress: string;
-  /** `0x`-prefixed hex representation of the same address. */
-  hexAddress: string;
 }
 
 const SIG_IDS: Record<SignatureTypeName, number> = { "ML-DSA-65": 1, Dilithium3: 0, MlDsa65: 1, SphincsSha2256f: 2 };
@@ -70,8 +68,7 @@ export function parseEncryptedKey(input: string | ShellEncryptedKey): ParsedShel
   const algorithmId = SIG_IDS[signatureType];
   const publicKey = publicKeyFromHex(raw.public_key);
   const canonicalAddress = derivePqAddressFromPublicKey(publicKey, algorithmId);
-  const hexAddress = normalizeHexAddress(canonicalAddress) as string;
-  return { raw, signatureType, algorithmId, publicKey, canonicalAddress, hexAddress };
+  return { raw, signatureType, algorithmId, publicKey, canonicalAddress };
 }
 
 /**
@@ -88,12 +85,7 @@ export function parseEncryptedKey(input: string | ShellEncryptedKey): ParsedShel
  */
 export function validateEncryptedKeyAddress(input: string | ShellEncryptedKey): ParsedShellKeystore {
   const parsed = parseEncryptedKey(input);
-  // Tolerate bare hex addresses written by older Rust CLI (no 0x prefix).
-  const rawAddr = parsed.raw.address;
-  const normalizedAddr = !rawAddr.startsWith("0x") && !rawAddr.startsWith("pq1")
-    ? "0x" + rawAddr
-    : rawAddr;
-  const declared = normalizePqAddress(normalizedAddr);
+  const declared = normalizePqAddress(parsed.raw.address);
   if (declared !== parsed.canonicalAddress) {
     throw new Error("keystore address mismatch: declared=" + declared + " derived=" + parsed.canonicalAddress);
   }
