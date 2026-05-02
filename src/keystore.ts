@@ -22,7 +22,12 @@ import { argon2id } from "hash-wasm";
 
 import { derivePqAddressFromPublicKey, normalizePqAddress } from "./address.js";
 import { adapterFromKeyPair } from "./adapters.js";
-import { ShellSigner, publicKeyFromHex, signatureTypeFromKeyType } from "./signer.js";
+import {
+  ShellSigner,
+  canonicalSignatureType,
+  publicKeyFromHex,
+  signatureTypeFromKeyType,
+} from "./signer.js";
 import type { ShellEncryptedKey, SignatureTypeName } from "./types.js";
 
 /**
@@ -59,7 +64,7 @@ const SIG_IDS: Record<SignatureTypeName, number> = { "ML-DSA-65": 1, Dilithium3:
  * ```typescript
  * const parsed = parseEncryptedKey(readFileSync("key.json", "utf8"));
  * console.log(parsed.canonicalAddress); // pq1…
- * console.log(parsed.signatureType);    // "MlDsa65"
+ * console.log(parsed.signatureType);    // "ML-DSA-65"
  * ```
  */
 export function parseEncryptedKey(input: string | ShellEncryptedKey): ParsedShellKeystore {
@@ -117,7 +122,7 @@ export function exportEncryptedKeyJson(input: string | ShellEncryptedKey): strin
  * ```
  */
 export function assertSignerMatchesKeystore(signer: ShellSigner, keystore: ParsedShellKeystore): void {
-  if (signer.signatureType !== keystore.signatureType) {
+  if (canonicalSignatureType(signer.signatureType) !== keystore.signatureType) {
     throw new Error("algorithm mismatch: signer=" + signer.signatureType + " keystore=" + keystore.signatureType);
   }
   const addr = signer.getAddress();

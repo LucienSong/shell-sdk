@@ -41,11 +41,15 @@ export const SIGNATURE_TYPE_IDS: Record<SignatureTypeName, number> = {
  * Keys are lowercase; matching is done after calling `.toLowerCase()`.
  */
 export const KEY_TYPE_TO_SIGNATURE_TYPE: Record<string, SignatureTypeName> = {
-  "ml-dsa-65": "MlDsa65",
-  mldsa65: "MlDsa65",
+  "ml-dsa-65": "ML-DSA-65",
+  mldsa65: "ML-DSA-65",
   dilithium3: "Dilithium3",
   "sphincs-sha2-256f": "SphincsSha2256f",
 };
+
+export function canonicalSignatureType(signatureType: SignatureTypeName): SignatureTypeName {
+  return signatureType === "MlDsa65" ? "ML-DSA-65" : signatureType;
+}
 
 /**
  * Minimal interface that any post-quantum signing implementation must satisfy
@@ -100,7 +104,7 @@ export class ShellSigner {
    * @param adapter - An adapter providing `sign` and `getPublicKey`.
    */
   constructor(signatureType: SignatureTypeName, adapter: SignerAdapter) {
-    this.signatureType = signatureType;
+    this.signatureType = canonicalSignatureType(signatureType);
     this.adapter = adapter;
   }
 
@@ -187,7 +191,7 @@ export class ShellSigner {
  *
  * @example
  * ```typescript
- * signatureTypeFromKeyType("mldsa65");          // "MlDsa65"
+ * signatureTypeFromKeyType("mldsa65");          // "ML-DSA-65"
  * signatureTypeFromKeyType("sphincs-sha2-256f"); // "SphincsSha2256f"
  * ```
  */
